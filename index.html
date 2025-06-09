@@ -94,22 +94,20 @@
         let map;
         let markers = [];
 
-        // Inizializza la mappa una volta che l'API di Google Maps è caricata
         async function initMap() {
-            // Coordinate del centro della Basilicata (circa)
             const basilicataCenter = { lat: 40.4000, lng: 15.9000 };
 
             map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 9, // Livello di zoom iniziale
+                zoom: 9,
                 center: basilicataCenter,
-                mapTypeId: google.maps.MapTypeId.ROADMAP // Tipo di mappa (es. SATELLITE, TERRAIN)
+                mapTypeId: google.maps.MapTypeId.ROADMAP
             });
 
             await fetchWebcamData();
         }
 
-        // Recupera i dati delle webcam dal foglio Google pubblicato come CSV
         async function fetchWebcamData() {
+            // Questo è il link al tuo foglio Google pubblicato come CSV
             const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTdQqAKe4k4goB9Q7ijesTG-JCE4uw-8UXX4HyHwuH9aeKsyxKHoklMLMfIE_yPL_hvG72s8mIUpeCP/pub?output=csv';
 
             try {
@@ -119,23 +117,42 @@
                 const rows = csvData.split('\n').slice(1);
 
                 rows.forEach(row => {
-                    // Split per virgola, ma gestisce anche le virgole all'interno di valori tra virgolette
-                    const columns = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
+                    // Regex per dividere il CSV, gestendo virgolette e virgole all'interno
+                    // Ora ci aspettiamo 7 colonne: Id,Città,Provincia,coordinate,Link,Stato,Note
+                    const columns = row.match(/(?:[^,"]+|"(?:[^"]|"")*")*/g);
 
+                    // Pulisce i valori rimuovendo virgolette e spazi extra
+                    const cleanValue = (value) => value ? value.trim().replace(/^"|"$/g, '') : '';
+
+                    // Ci assicuriamo che ci siano almeno 7 colonne
                     if (columns && columns.length >= 7) {
-                        const idCittaProvincia = columns[0].trim().replace(/^"|"$/g, ''); // Rimuove virgolette se presenti
-                        const coordinateStr = columns[2].trim().replace(/^"|"$/g, '');
-                        const link = columns[3].trim().replace(/^"|"$/g, '');
-                        const stato = columns[4].trim().replace(/^"|"$/g, '');
-                        const note = columns[5] ? columns[5].trim().replace(/^"|"$/g, '') : '';
-                        const provincia = columns[1].trim().replace(/^"|"$/g, ''); // Provincia è la seconda colonna
+                        const id = cleanValue(columns[0]); // Id (indice 0)
+                        const citta = cleanValue(columns[1]); // Città (indice 1)
+                        const provincia = cleanValue(columns[2]); // Provincia (indice 2)
+                        const coordinateStr = cleanValue(columns[3]); // Coordinate (indice 3)
+                        const link = cleanValue(columns[4]); // Link (indice 4)
+                        const stato = cleanValue(columns[5]); // Stato (indice 5)
+                        const note = cleanValue(columns[6]); // Note (indice 6)
 
-                        if (coordinateStr) {
+                        if (coordinateStr && link) { // Assicurati che coordinate e link non siano vuoti
                             const [lat, lng] = coordinateStr.split(',').map(Number);
                             if (!isNaN(lat) && !isNaN(lng)) {
-                                addMarker({ idCittaProvincia, provincia, lat, lng, link, stato, note });
+                                addMarker({
+                                    idCittaProvincia: `${citta} (${provincia})`,
+                                    lat,
+                                    lng,
+                                    link,
+                                    stato,
+                                    note
+                                });
+                            } else {
+                                console.warn(`Coordinate non valide per ${idCittaProvincia}: ${coordinateStr}`);
                             }
+                        } else {
+                            console.warn(`Dati mancanti per la riga: ${row}`);
                         }
+                    } else {
+                        console.warn(`Riga con numero di colonne insufficiente (o vuota): ${row}`);
                     }
                 });
             } catch (error) {
@@ -144,19 +161,15 @@
             }
         }
 
-        // Aggiunge un marker alla mappa per ogni webcam
         function addMarker(webcam) {
             const marker = new google.maps.Marker({
                 position: { lat: webcam.lat, lng: webcam.lng },
                 map: map,
                 title: webcam.idCittaProvincia,
-                // Puoi aggiungere un'icona personalizzata qui, es:
-                // icon: 'https://maps.google.com/mapfiles/kml/pal2/icon28.png'
             });
 
-            // Contenuto della finestra informativa del marker
             const infoWindowContent = `
-                <h3>${webcam.idCittaProvincia} (${webcam.provincia})</h3>
+                <h3>${webcam.idCittaProvincia}</h3>
                 <p>Stato: <strong>${webcam.stato}</strong></p>
                 ${webcam.note ? `<p>Note: ${webcam.note}</p>` : ''}
                 <p><a href="${webcam.link}" target="_blank">Vedi Webcam Esterna</a></p>
@@ -174,12 +187,10 @@
             markers.push(marker);
         }
 
-        // Funzione per aggiungere la webcam al mosaico, navigando alla pagina del mosaico
         function addWebcamToMosaic(idCittaProvincia, link) {
-            // Reindirizza alla pagina del mosaico con i parametri URL
             window.open(`mosaico.html?webcam=${idCittaProvincia}&link=${link}`, '_blank');
         }
     </script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPopf5IhIsRjpZ8QS-W1atKwJ8OTvxscY&callback=initMap"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=TUA_API_KEY&callback=initMap"></script>
 </body>
 </html>
