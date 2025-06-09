@@ -1,91 +1,7 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Webcam Basilicata - Mappa Interattiva</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        /* Stili CSS */
-        body {
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            background-color: #f4f7f6;
-            color: #333;
-        }
-
-        h1 {
-            text-align: center;
-            padding: 25px;
-            background-color: #2c3e50; /* Blu scuro */
-            color: white;
-            margin-bottom: 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            font-size: 2.2em;
-        }
-
-        #map {
-            flex-grow: 1; /* La mappa occupa tutto lo spazio disponibile */
-            width: 100%;
-            min-height: 500px; /* Altezza minima per la mappa */
-            border-top: 5px solid #1abc9c; /* Verde acqua */
-        }
-
-        /* Stili per l'InfoWindow di Google Maps */
-        .gm-style .gm-iw-c {
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-            background-color: #ffffff;
-        }
-
-        .gm-style .gm-iw-c h3 {
-            margin-top: 0;
-            color: #2c3e50;
-            font-size: 1.4em;
-            margin-bottom: 10px;
-        }
-
-        .gm-style .gm-iw-c p {
-            margin: 5px 0;
-            font-size: 0.95em;
-            line-height: 1.5;
-        }
-
-        .gm-style .gm-iw-c a {
-            color: #1abc9c;
-            text-decoration: none;
-            font-weight: bold;
-            transition: color 0.2s ease-in-out;
-        }
-
-        .gm-style .gm-iw-c a:hover {
-            color: #16a085;
-        }
-
-        .gm-style .gm-iw-c button {
-            background-color: #3498db; /* Blu */
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9em;
-            margin-top: 10px;
-            transition: background-color 0.2s ease-in-out;
-        }
-
-        .gm-style .gm-iw-c button:hover {
-            background-color: #2980b9;
-        }
-    </style>
-</head>
+    </head>
 <body>
     <h1>Webcam in Basilicata</h1>
     <div id="map"></div>
@@ -112,19 +28,16 @@
             const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTdQqAKe4k4goB9Q7ijesTG-JCE4uw-8UXX4HyHwuH9aeKsyxKHoklMLMfIE_yPL_hvG72s8mIUpeCP/pub?output=csv';
 
             try {
-                // Utilizza Papa Parse per il parsing del CSV
                 PapaParse.parse(csvUrl, {
-                    download: true, // Scarica il file dal URL
-                    header: true,   // Tratta la prima riga come intestazione (per nomi di colonna)
-                    skipEmptyLines: true, // Ignora le righe completamente vuote
+                    download: true,
+                    header: true,
+                    skipEmptyLines: true,
                     complete: function(results) {
                         if (results.errors.length > 0) {
                             console.error("Errori nel parsing CSV:", results.errors);
                         }
 
                         results.data.forEach(row => {
-                            // Assicurati che i nomi delle colonne corrispondano esattamente all'intestazione del tuo CSV
-                            // "Id", "Città", "Provincia", "coordinate", "Link", "Stato", "Note"
                             const id = row["Id"];
                             const citta = row["Città"];
                             const provincia = row["Provincia"];
@@ -133,8 +46,7 @@
                             const stato = row["Stato"];
                             const note = row["Note"];
 
-                            // Effettua i controlli di validità
-                            if (coordinateStr && link && citta && provincia) { // Controlliamo i campi essenziali
+                            if (coordinateStr && link && citta && provincia) {
                                 const [lat, lng] = coordinateStr.split(',').map(Number);
                                 if (!isNaN(lat) && !isNaN(lng)) {
                                     addMarker({
@@ -142,14 +54,21 @@
                                         lat,
                                         lng,
                                         link,
-                                        stato: stato || 'Sconosciuto', // Fornisci un valore di default se 'Stato' è vuoto
-                                        note: note || 'Nessuna nota'   // Fornisci un valore di default se 'Note' è vuoto
+                                        stato: stato || 'Sconosciuto',
+                                        note: note || 'Nessuna nota'
                                     });
                                 } else {
                                     console.warn(`Coordinate non valide per la riga (salto marker):`, row);
                                 }
                             } else {
-                                console.warn(`Dati essenziali mancanti per la riga (salto marker):`, row);
+                                // Questa è la riga "vuota" o incompleta che causa l'avviso
+                                // Se `id` è vuoto o null, è probabilmente una riga che non dovrebbe essere processata
+                                if (id === "" || id === null || id === undefined) {
+                                    // Ignora silenziosamente le righe prive di ID (probabilmente l'ultima riga del tuo CSV)
+                                    // console.warn(`Riga incompleta o senza ID (ignorata):`, row); // Puoi riattivare questo per debug
+                                } else {
+                                    console.warn(`Dati essenziali (coordinate, link, città o provincia) mancanti per la riga (salto marker):`, row);
+                                }
                             }
                         });
                     }
@@ -190,6 +109,6 @@
             window.open(`mosaico.html?webcam=${idCittaProvincia}&link=${link}`, '_blank');
         }
     </script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPopf5IhIsRjpZ8QS-W1atKwJ8OTvxscY&callback=initMap"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPopf5IhIsRjpZ8QS-W1atKwJ8OTvxscY=initMap"></script>
 </body>
 </html>
