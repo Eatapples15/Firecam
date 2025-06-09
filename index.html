@@ -90,6 +90,8 @@
     <h1>Webcam in Basilicata</h1>
     <div id="map"></div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
     <script>
         let map;
         let markers = [];
@@ -107,56 +109,53 @@
         }
 
         async function fetchWebcamData() {
-            // Questo è il link al tuo foglio Google pubblicato come CSV
             const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTdQqAKe4k4goB9Q7ijesTG-JCE4uw-8UXX4HyHwuH9aeKsyxKHoklMLMfIE_yPL_hvG72s8mIUpeCP/pub?output=csv';
 
             try {
-                const response = await fetch(csvUrl);
-                const csvData = await response.text();
-                // Dividi per riga, ignora la prima riga (intestazione)
-                const rows = csvData.split('\n').slice(1);
-
-                rows.forEach(row => {
-                    // Regex per dividere il CSV, gestendo virgolette e virgole all'interno
-                    // Ora ci aspettiamo 7 colonne: Id,Città,Provincia,coordinate,Link,Stato,Note
-                    const columns = row.match(/(?:[^,"]+|"(?:[^"]|"")*")*/g);
-
-                    // Pulisce i valori rimuovendo virgolette e spazi extra
-                    const cleanValue = (value) => value ? value.trim().replace(/^"|"$/g, '') : '';
-
-                    // Ci assicuriamo che ci siano almeno 7 colonne
-                    if (columns && columns.length >= 7) {
-                        const id = cleanValue(columns[0]); // Id (indice 0)
-                        const citta = cleanValue(columns[1]); // Città (indice 1)
-                        const provincia = cleanValue(columns[2]); // Provincia (indice 2)
-                        const coordinateStr = cleanValue(columns[3]); // Coordinate (indice 3)
-                        const link = cleanValue(columns[4]); // Link (indice 4)
-                        const stato = cleanValue(columns[5]); // Stato (indice 5)
-                        const note = cleanValue(columns[6]); // Note (indice 6)
-
-                        if (coordinateStr && link) { // Assicurati che coordinate e link non siano vuoti
-                            const [lat, lng] = coordinateStr.split(',').map(Number);
-                            if (!isNaN(lat) && !isNaN(lng)) {
-                                addMarker({
-                                    idCittaProvincia: `${citta} (${provincia})`,
-                                    lat,
-                                    lng,
-                                    link,
-                                    stato,
-                                    note
-                                });
-                            } else {
-                                console.warn(`Coordinate non valide per ${idCittaProvincia}: ${coordinateStr}`);
-                            }
-                        } else {
-                            console.warn(`Dati mancanti per la riga: ${row}`);
+                // Utilizza Papa Parse per il parsing del CSV
+                PapaParse.parse(csvUrl, {
+                    download: true, // Scarica il file dal URL
+                    header: true,   // Tratta la prima riga come intestazione (per nomi di colonna)
+                    skipEmptyLines: true, // Ignora le righe completamente vuote
+                    complete: function(results) {
+                        if (results.errors.length > 0) {
+                            console.error("Errori nel parsing CSV:", results.errors);
                         }
-                    } else {
-                        console.warn(`Riga con numero di colonne insufficiente (o vuota): ${row}`);
+
+                        results.data.forEach(row => {
+                            // Assicurati che i nomi delle colonne corrispondano esattamente all'intestazione del tuo CSV
+                            // "Id", "Città", "Provincia", "coordinate", "Link", "Stato", "Note"
+                            const id = row["Id"];
+                            const citta = row["Città"];
+                            const provincia = row["Provincia"];
+                            const coordinateStr = row["coordinate"];
+                            const link = row["Link"];
+                            const stato = row["Stato"];
+                            const note = row["Note"];
+
+                            // Effettua i controlli di validità
+                            if (coordinateStr && link && citta && provincia) { // Controlliamo i campi essenziali
+                                const [lat, lng] = coordinateStr.split(',').map(Number);
+                                if (!isNaN(lat) && !isNaN(lng)) {
+                                    addMarker({
+                                        idCittaProvincia: `${citta} (${provincia})`,
+                                        lat,
+                                        lng,
+                                        link,
+                                        stato: stato || 'Sconosciuto', // Fornisci un valore di default se 'Stato' è vuoto
+                                        note: note || 'Nessuna nota'   // Fornisci un valore di default se 'Note' è vuoto
+                                    });
+                                } else {
+                                    console.warn(`Coordinate non valide per la riga (salto marker):`, row);
+                                }
+                            } else {
+                                console.warn(`Dati essenziali mancanti per la riga (salto marker):`, row);
+                            }
+                        });
                     }
                 });
             } catch (error) {
-                console.error("Errore nel recupero dei dati CSV:", error);
+                console.error("Errore nel recupero o inizializzazione del parsing CSV:", error);
                 alert("Si è verificato un errore durante il caricamento dei dati delle webcam. Controlla la console per i dettagli.");
             }
         }
