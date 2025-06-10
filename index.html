@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* Stili CSS */
+        /* Stili CSS - Nessuna modifica qui */
         body {
             font-family: 'Roboto', sans-serif;
             margin: 0;
@@ -223,33 +223,35 @@
     <script>
         let map;
         let markers = [];
+        // Dati delle webcam aggiornati con i link delle immagini embeddabili
+        // E ORA ANCHE con l'URL della pagina dinamica per l'apertura esterna
         const webcamData = [
-            // Webcam con link a immagini embeddabili da SkylineWebcams
-            { id: 1, citta: "Castelsaraceno", provincia: "Pz", lat: 40.165169697747686, lng: 15.991809747770796, link: "https://embed.skylinewebcams.com/img/1878.jpg", stato: "Attivo", note: "Ponte Tibetano" },
-            { id: 2, citta: "Atella", provincia: "Pz", lat: 40.8826447471942, lng: 15.653783622168362, link: "https://embed.skylinewebcams.com/img/1613.jpg", stato: "Attivo", note: "Atella - Panoramica" },
-            { id: 3, citta: "Atella", provincia: "Pz", lat: 40.87761146075657, lng: 15.65476720199047, link: "https://embed.skylinewebcams.com/img/5215.jpg", stato: "Attivo", note: "Panoramica di Atella" },
-            { id: 4, citta: "Potenza", provincia: "Pz", lat: 40.640407, lng: 15.805604, link: "https://embed.skylinewebcams.com/img/1575.jpg", stato: "Attivo", note: "Meteo a Potenza" }, // Coordinate Potenza generiche, da verificare
-            { id: 5, citta: "Tito Scalo", provincia: "Pz", lat: 40.609303277937876, lng: 15.71616579631928, link: "https://embed.skylinewebcams.com/img/3662.jpg", stato: "Attivo", note: "Tito Scalo" },
-            { id: 6, citta: "Pignola", provincia: "Pz", lat: 40.590517353715086, lng: 15.763092245994766, link: "https://embed.skylinewebcams.com/img/1594.jpg", stato: "Attivo", note: "Lago Pantano - Pignola" },
-            { id: 7, citta: "Pignola", provincia: "Pz", lat: 40.585539, lng: 15.789575, link: "https://embed.skylinewebcams.com/img/2839.jpg", stato: "Attivo", note: "Pignola - Centro Storico" }, // Coordinate Pignola generiche, da verificare
-            { id: 8, citta: "Brienza", provincia: "Pz", lat: 40.474579119226284, lng: 15.633141302772602, link: "https://embed.skylinewebcams.com/img/1548.jpg", stato: "Attivo", note: "Brienza - Area Verde" },
-            { id: 9, citta: "Maratea", provincia: "Pz", lat: 40.03171125873212, lng: 15.675628338024524, link: "https://embed.skylinewebcams.com/img/1390.jpg", stato: "Attivo", note: "Maratea - Borgo e Mare" },
-            { id: 10, citta: "Maratea", provincia: "Pz", lat: 39.99869372461923, lng: 15.699372282181857, link: "https://embed.skylinewebcams.com/img/842.jpg", stato: "Attivo", note: "Maratea - Vista Mare" },
-            { id: 11, citta: "Potenza", provincia: "Pz", lat: 40.6394, lng: 15.7997, link: "https://www.skylinewebcams.com/it/webcam/italia/basilicata/potenza/panorama.html", stato: "Attivo", note: "Vista Ponte Musumeci" }, // Nessun embed diretto immagine trovato, manteniamo la pagina
-            { id: 12, citta: "Lauria", provincia: "Pz", lat: 40.14507266366154, lng: 15.849111099494504, link: "https://www.skylinewebcams.com/it/webcam/italia/basilicata/potenza/conserva-di-lauria.html", stato: "Attivo", note: "Rifugio Conserva" }, // Nessun embed diretto immagine trovato, manteniamo la pagina
-            { id: 13, citta: "Pisticci", provincia: "Mt", lat: 40.3897431058606, lng: 16.555929529335597, link: "https://www.skylinewebcams.com/it/webcam/italia/basilicata/matera/pisticci-chiesa-madre.html", stato: "Attivo", note: "Vista valle" }, // Nessun embed diretto immagine trovato, manteniamo la pagina
-
-            // Webcam di MeteoPlanet o altre che non supportano embed diretto di immagine
-            { id: 14, citta: "Brienza", provincia: "Pz", lat: 40.47858887630677, lng: 15.627343998586934, link: "https://www.meteoplanet.it/webcam/brienza/borgo+di+brienza/4437", stato: "Attivo", note: "NW - Castello" },
-            { id: 15, citta: "MarsicoNuovo", provincia: "Pz", lat: 40.42285890257485, lng: 15.735803508981208, link: "https://www.meteoplanet.it/webcam/marsico+nuovo/cattedrale+di+marsico+nuovo/4951", stato: "Attivo", note: "S" },
-            { id: 16, citta: "Marsicovetere", provincia: "Pz", lat: 40.374836245303186, lng: 15.824897515523203, link: "https://www.meteoplanet.it/webcam/marsicovetere/val+d%27agri+-+marsicovetere/4764", stato: "Attivo", note: "WNW - Val D'Agri" },
-            { id: 17, citta: "Miglionico", provincia: "Mt", lat: 40.569972433291625, lng: 16.5015611718576, link: "https://www.meteoplanet.it/webcam/miglionico/miglionico+panoramica/2291", stato: "Attivo", note: "Diga" },
-            { id: 18, citta: "Moliterno", provincia: "Pz", lat: 40.2404575280996, lng: 15.870072676748283, link: "https://www.meteoplanet.it/webcam/moliterno/centro+storico+-+moliterno/4765", stato: "Attivo", note: "Monte Reparo" },
-            { id: 19, citta: "Pietrapertosa", provincia: "Pz", lat: 40.51592073591873, lng: 16.06336971659474, link: "https://www.meteoplanet.it/webcam/pietrapertosa/dolomiti+lucane+-+pietrapertosa/4918", stato: "Attivo", note: "Dolomiti" },
-            { id: 20, citta: "San Severino L", provincia: "Pz", lat: 40.021740999418604, lng: 16.1390550256708, link: "https://www.meteoplanet.it/webcam/san+severino+lucano/monte+sirino+e+monte+alpi/4917", stato: "Attivo", note: "Monte Sirino" },
-            { id: 21, citta: "San Severino L", provincia: "Pz", lat: 40.02268291438262, lng: 16.13864747037591, link: "https://www.meteoplanet.it/webcam/san+severino+lucano/massiccio+del+pollino+-+san+severino/4751", stato: "Attivo", note: "Monte Sirino SSW" },
-            { id: 22, citta: "Pisticci", provincia: "Mt", lat: 40.359846618506516, lng: 16.69396523160106, link: "https://www.meteoplanet.it/webcam/pisticci/marconia+-+pisticci/4435", stato: "Attivo", note: "ESE - Marina" },
-            { id: 23, citta: "Pergola", provincia: "Pz", lat: 40.4311207784267, lng: 15.681646213121974, link: "https://www.pergolameteo.it/joomla/images/webcampergola.html", stato: "Attivo", note: "3 webcam" }
+            // Ho abbinato i link delle immagini dove possibile, altrimenti uso lo stesso URL per 'link' e 'url_pagina'
+            { id: 1, citta: "Castelsaraceno", provincia: "Pz", lat: 40.165169697747686, lng: 15.991809747770796, link: "https://embed.skylinewebcams.com/img/1878.jpg", url_pagina: "https://www.skylinewebcams.com/it/webcam/italia/basilicata/potenza/castelsaraceno-ponte-tibetano.html", stato: "Attivo", note: "Ponte Tibetano" },
+            { id: 2, citta: "Potenza", provincia: "Pz", lat: 40.6394, lng: 15.7997, link: "https://www.skylinewebcams.com/it/webcam/italia/basilicata/potenza/panorama.html", url_pagina: "https://www.skylinewebcams.com/it/webcam/italia/basilicata/potenza/panorama.html", stato: "Attivo", note: "Vista Ponte Musumeci" },
+            { id: 3, citta: "Pignola", provincia: "Pz", lat: 40.585539, lng: 15.789575, link: "https://embed.skylinewebcams.com/img/2839.jpg", url_pagina: "https://www.skylinewebcams.com/it/webcam/italia/basilicata/potenza/pignola-potenza.html", stato: "Attivo", note: "Pignola - Centro Storico" },
+            { id: 4, citta: "Maratea", provincia: "Pz", lat: 39.99869372461923, lng: 15.699372282181857, link: "https://embed.skylinewebcams.com/img/842.jpg", url_pagina: "https://www.skylinewebcams.com/it/webcam/italia/basilicata/potenza/maratea.html", stato: "Attivo", note: "Maratea - Vista Mare" },
+            { id: 5, citta: "Pisticci", provincia: "Mt", lat: 40.3897431058606, lng: 16.555929529335597, link: "https://www.skylinewebcams.com/it/webcam/italia/basilicata/matera/pisticci-chiesa-madre.html", url_pagina: "https://www.skylinewebcams.com/it/webcam/italia/basilicata/matera/pisticci-chiesa-madre.html", stato: "Attivo", note: "Vista valle" },
+            { id: 6, citta: "Maratea", provincia: "Pz", lat: 40.03171125873212, lng: 15.675628338024524, link: "https://embed.skylinewebcams.com/img/1390.jpg", url_pagina: "https://www.skylinewebcams.com/it/webcam/italia/basilicata/potenza/maratea-basilicata.html", stato: "Attivo", note: "Maratea - Borgo e Mare" },
+            { id: 7, citta: "Tito Scalo", provincia: "Pz", lat: 40.609303277937876, lng: 15.71616579631928, link: "https://embed.skylinewebcams.com/img/3662.jpg", url_pagina: "https://www.skylinewebcams.com/it/webcam/italia/basilicata/potenza/tito-scalo.html", stato: "Attivo", note: "Tito Scalo" },
+            { id: 8, citta: "Lauria", provincia: "Pz", lat: 40.14507266366154, lng: 15.849111099494504, link: "https://www.skylinewebcams.com/it/webcam/italia/basilicata/potenza/conserva-di-lauria.html", url_pagina: "https://www.skylinewebcams.com/it/webcam/italia/basilicata/potenza/conserva-di-lauria.html", stato: "Attivo", note: "Rifugio Conserva" },
+            { id: 9, citta: "Atella", provincia: "Pz", lat: 40.8826447471942, lng: 15.653783622168362, link: "https://embed.skylinewebcams.com/img/1613.jpg", url_pagina: "https://www.skylinewebcams.com/it/webcam/italia/basilicata/potenza/atella.html", stato: "Attivo", note: "Atella - Panoramica" },
+            { id: 10, citta: "Potenza", provincia: "Pz", lat: 40.640407, lng: 15.805604, link: "https://embed.skylinewebcams.com/img/1575.jpg", url_pagina: "https://www.skylinewebcams.com/it/webcam/italia/basilicata/potenza/meteo-potenza.html", stato: "Attivo", note: "Meteo a Potenza" },
+            { id: 11, citta: "Pignola", provincia: "Pz", lat: 40.590517353715086, lng: 15.763092245994766, link: "https://embed.skylinewebcams.com/img/1594.jpg", url_pagina: "https://www.skylinewebcams.com/it/webcam/italia/basilicata/potenza/lago-pantano-pignola.html", stato: "Attivo", note: "Lago Pantano - Pignola" },
+            { id: 12, citta: "Atella", provincia: "Pz", lat: 40.87761146075657, lng: 15.65476720199047, link: "https://embed.skylinewebcams.com/img/5215.jpg", url_pagina: "https://www.skylinewebcams.com/it/webcam/italia/basilicata/potenza/panoramica-di-atella.html", stato: "Attivo", note: "Panoramica di Atella" },
+            { id: 13, citta: "Brienza", provincia: "Pz", lat: 40.474579119226284, lng: 15.633141302772602, link: "https://embed.skylinewebcams.com/img/1548.jpg", url_pagina: "https://www.skylinewebcams.com/it/webcam/italia/basilicata/potenza/brienza.html", stato: "Attivo", note: "Brienza - Area Verde" },
+            // MeteoPlanet e altre, dove link immagine e url_pagina sono gli stessi
+            { id: 14, citta: "Brienza", provincia: "Pz", lat: 40.47858887630677, lng: 15.627343998586934, link: "https://www.meteoplanet.it/webcam/brienza/borgo+di+brienza/4437", url_pagina: "https://www.meteoplanet.it/webcam/brienza/borgo+di+brienza/4437", stato: "Attivo", note: "NW - Castello" },
+            { id: 15, citta: "MarsicoNuovo", provincia: "Pz", lat: 40.42285890257485, lng: 15.735803508981208, link: "https://www.meteoplanet.it/webcam/marsico+nuovo/cattedrale+di+marsico+nuovo/4951", url_pagina: "https://www.meteoplanet.it/webcam/marsico+nuovo/cattedrale+di+marsico+nuovo/4951", stato: "Attivo", note: "S" },
+            { id: 16, citta: "Marsicovetere", provincia: "Pz", lat: 40.374836245303186, lng: 15.824897515523203, link: "https://www.meteoplanet.it/webcam/marsicovetere/val+d%27agri+-+marsicovetere/4764", url_pagina: "https://www.meteoplanet.it/webcam/marsicovetere/val+d%27agri+-+marsicovetere/4764", stato: "Attivo", note: "WNW - Val D'Agri" },
+            { id: 17, citta: "Miglionico", provincia: "Mt", lat: 40.569972433291625, lng: 16.5015611718576, link: "https://www.meteoplanet.it/webcam/miglionico/miglionico+panoramica/2291", url_pagina: "https://www.meteoplanet.it/webcam/miglionico/miglionico+panoramica/2291", stato: "Attivo", note: "Diga" },
+            { id: 18, citta: "Moliterno", provincia: "Pz", lat: 40.2404575280996, lng: 15.870072676748283, link: "https://www.meteoplanet.it/webcam/moliterno/centro+storico+-+moliterno/4765", url_pagina: "https://www.meteoplanet.it/webcam/moliterno/centro+storico+-+moliterno/4765", stato: "Attivo", note: "Monte Reparo" },
+            { id: 19, citta: "Pietrapertosa", provincia: "Pz", lat: 40.51592073591873, lng: 16.06336971659474, link: "https://www.meteoplanet.it/webcam/pietrapertosa/dolomiti+lucane+-+pietrapertosa/4918", url_pagina: "https://www.meteoplanet.it/webcam/pietrapertosa/dolomiti+lucane+-+pietrapertosa/4918", stato: "Attivo", note: "Dolomiti" },
+            { id: 20, citta: "San Severino L", provincia: "Pz", lat: 40.021740999418604, lng: 16.1390550256708, link: "https://www.meteoplanet.it/webcam/san+severino+lucano/monte+sirino+e+monte+alpi/4917", url_pagina: "https://www.meteoplanet.it/webcam/san+severino+lucano/monte+sirino+e+monte+alpi/4917", stato: "Attivo", note: "Monte Sirino" },
+            { id: 21, citta: "San Severino L", provincia: "Pz", lat: 40.02268291438262, lng: 16.13864747037591, link: "https://www.meteoplanet.it/webcam/san+severino+lucano/massiccio+del+pollino+-+san+severino/4751", url_pagina: "https://www.meteoplanet.it/webcam/san+severino+lucano/massiccio+del+pollino+-+san+severino/4751", stato: "Attivo", note: "Monte Sirino SSW" },
+            { id: 22, citta: "Pisticci", provincia: "Mt", lat: 40.359846618506516, lng: 16.69396523160106, link: "https://www.meteoplanet.it/webcam/pisticci/marconia+-+pisticci/4435", url_pagina: "https://www.meteoplanet.it/webcam/pisticci/marconia+-+pisticci/4435", stato: "Attivo", note: "ESE - Marina" },
+            { id: 23, citta: "Pergola", provincia: "Pz", lat: 40.4311207784267, lng: 15.681646213121974, link: "https://www.pergolameteo.it/joomla/images/webcampergola.html", url_pagina: "https://www.pergolameteo.it/joomla/images/webcampergola.html", stato: "Attivo", note: "3 webcam" },
+            { id: 24, citta: "Campoli", provincia: "Pz", lat: 40.3500, lng: 15.7500, link: "https://meteocampoli.altervista.org/webcam/montagna/basilicata", url_pagina: "https://meteocampoli.altervista.org/webcam/montagna/basilicata", stato: "Attivo", note: "Webcam Meteo Campoli" }
         ];
 
         async function initMap() {
@@ -273,7 +275,8 @@
                         idCittaProvincia: `${webcam.citta} (${webcam.provincia})`,
                         lat: webcam.lat,
                         lng: webcam.lng,
-                        link: webcam.link,
+                        link: webcam.link, // Questo è il link dell'immagine o pagina per l'InfoWindow
+                        url_pagina: webcam.url_pagina, // Questo è il link della pagina dinamica per il click
                         stato: webcam.stato || 'Sconosciuto',
                         note: webcam.note || 'Nessuna nota'
                     });
@@ -290,11 +293,12 @@
                 title: webcam.idCittaProvincia,
             });
 
+            // Usiamo url_pagina per il link "Vedi Webcam Esterna (player)"
             const infoWindowContent = `
                 <h3>${webcam.idCittaProvincia}</h3>
                 <p>Stato: <strong>${webcam.stato}</strong></p>
                 ${webcam.note ? `<p>Note: ${webcam.note}</p>` : ''}
-                <p><a href="${webcam.link}" target="_blank">Vedi Webcam Esterna</a></p>
+                <p><a href="${webcam.url_pagina}" target="_blank">Vedi Webcam Esterna (player)</a></p>
                 <div style="margin-top: 10px;">
                     <input type="checkbox" id="webcam-${webcam.id}" value="${webcam.id}" 
                            onchange="updateSelectionFromMap(${webcam.id})" />
@@ -335,7 +339,7 @@
             const checkboxInPanel = document.getElementById(`checkbox-${webcamId}`);
             const checkboxInInfoWindow = document.getElementById(`webcam-${webcamId}`);
             if (checkboxInPanel && checkboxInInfoWindow) {
-                checkboxInPanel.checked = checkboxInInfoWindow.checked;
+                    checkboxInInfoWindow.checked = checkboxInPanel.checked;
             }
         }
 
@@ -355,7 +359,8 @@
                 if (webcam) {
                     selectedWebcams.push({
                         name: `${webcam.citta} (${webcam.provincia}) - ${webcam.note}`,
-                        link: webcam.link
+                        link: webcam.link, // Questo è il link dell'immagine per il mosaico
+                        url_pagina: webcam.url_pagina // Questo è il link della pagina dinamica per il click
                     });
                 }
             });
