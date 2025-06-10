@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        /* Stili CSS - Nessuna modifica qui */
         body {
             font-family: 'Roboto', sans-serif;
             margin: 0;
@@ -77,15 +78,15 @@
 
         /* Stile per il link del titolo */
         .webcam-card h3 a {
-            text-decoration: none; /* Rimuove la sottolineatura di default */
-            color: inherit; /* Mantiene il colore del testo dell'h3 */
+            text-decoration: none;
+            color: inherit;
             cursor: pointer;
-            display: block; /* Fa in modo che l'intero h3 sia cliccabile */
-            padding: 0 10px; /* Mantieni il padding per l'area cliccabile */
+            display: block;
+            padding: 0 10px;
         }
 
         .webcam-card h3 a:hover {
-            color: #3498db; /* Cambia colore al passaggio del mouse */
+            color: #3498db;
         }
 
         .webcam-content {
@@ -190,27 +191,28 @@
                 card.className = 'webcam-card';
 
                 let contentHtml = '';
+                // La RegEx controlla se il 'link' (che è l'embed statico) è un'immagine
                 const isImageLink = (webcam.link.match(/\.(jpeg|jpg|gif|png|webp|avif)(\?.*)?$/i));
 
                 if (isImageLink) {
+                    // Se è un link a un'immagine, incorpora l'immagine
+                    // Il link "Apri Pagina Webcam" userà url_pagina
                     contentHtml = `<img src="${webcam.link}" alt="${webcam.name}" 
                                    onerror="this.onerror=null;this.src='placeholder.png'; this.nextElementSibling.style.display='flex';" />
                                    <div class="link-info" style="display:none;">
                                        <p>Impossibile caricare l'immagine.</p>
-                                       <a href="${webcam.link.replace('/img/', '/it/webcam/italia/basilicata/potenza/').replace('.jpg', '.html')}" target="_blank">Apri Pagina Webcam</a>
+                                       <a href="${webcam.url_pagina}" target="_blank">Apri Pagina Webcam</a>
                                    </div>`;
-                    // Ho aggiunto una logica per dedurre il link alla pagina completa da un link embed di SkylineWebcams.
-                    // Questo potrebbe non funzionare per TUTTI i casi, a seconda della struttura URL di Skyline.
-                    // La soluzione più robusta sarebbe salvare sia l'URL dell'immagine che l'URL della pagina completa nei dati.
                 } else {
+                    // Altrimenti, mostra solo il link per aprirla in una nuova scheda, usando url_pagina
                     contentHtml = `<div class="link-info">
                                        <p>Impossibile incorporare la webcam.</p>
-                                       <a href="${webcam.link}" target="_blank">Apri Webcam in Nuova Scheda</a>
+                                       <a href="${webcam.url_pagina}" target="_blank">Apri Webcam in Nuova Scheda</a>
                                    </div>`;
                 }
 
                 card.innerHTML = `
-                    <h3><a href="${webcam.link}" target="_blank">${webcam.name}</a></h3>
+                    <h3><a href="${webcam.url_pagina}" target="_blank">${webcam.name}</a></h3>
                     <div class="webcam-content">
                         ${contentHtml}
                     </div>
