@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Webcam Basilicata - Mappa Interattiva</title>
+    <title>Webcam Basilicata - Sala di Controllo</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
@@ -20,21 +20,107 @@
             color: #333;
         }
 
-        h1 {
+        header {
             text-align: center;
-            padding: 25px;
-            background-color: #2c3e50; /* Blu scuro */
+            padding: 15px;
+            background-color: #2c3e50;
             color: white;
-            margin-bottom: 0;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap; /* Permette all'immagine e al testo di andare a capo su schermi piccoli */
+        }
+
+        header img {
+            height: 60px; /* Dimensione del logo */
+            margin-right: 15px;
+        }
+
+        header h1 {
+            margin: 0;
             font-size: 2.2em;
+        }
+
+        #map-container {
+            display: flex;
+            flex-grow: 1;
+            flex-direction: column; /* Colonna su mobile */
+            background-color: #ecf0f1;
         }
 
         #map {
             flex-grow: 1;
             width: 100%;
-            min-height: 500px;
+            min-height: 400px; /* Altezza minima per la mappa */
             border-top: 5px solid #1abc9c;
+        }
+
+        #controls {
+            padding: 20px;
+            background-color: #ffffff;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        #controls h2 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 1.5em;
+        }
+
+        #webcam-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* 3 colonne o più se spazio */
+            gap: 10px;
+            max-height: 300px; /* Limita l'altezza per lo scroll */
+            overflow-y: auto; /* Aggiunge scroll se troppe webcam */
+            padding-right: 10px; /* Spazio per la scrollbar */
+        }
+
+        .webcam-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background-color: #f9f9f9;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #eee;
+        }
+
+        .webcam-item input[type="checkbox"] {
+            transform: scale(1.2);
+        }
+
+        .webcam-item label {
+            cursor: pointer;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.2s ease-in-out;
+            flex-grow: 1;
+        }
+
+        button:hover {
+            background-color: #2980b9;
         }
 
         /* Stili per l'InfoWindow di Google Maps */
@@ -84,17 +170,59 @@
         .gm-style .gm-iw-c button:hover {
             background-color: #2980b9;
         }
+        
+        @media (min-width: 768px) {
+            #map-container {
+                flex-direction: row; /* Riga su desktop */
+            }
+            #controls {
+                width: 300px; /* Larghezza fissa per i controlli */
+                border-right: 1px solid #ddd;
+                border-bottom: none;
+                flex-shrink: 0; /* Impedisce ai controlli di restringersi */
+                overflow-y: auto; /* Scroll per i controlli se necessario */
+            }
+            #map {
+                flex-grow: 1;
+                border-top: none;
+                border-left: 5px solid #1abc9c;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>Webcam in Basilicata</h1>
-    <div id="map"></div>
+    <header>
+        <img src="Logo.png" alt="Logo">
+        <h1>Sala di Controllo</h1>
+    </header>
+
+    <div id="map-container">
+        <div id="controls">
+            <h2>Configura Mosaico</h2>
+            <div>
+                <label for="layout-select">Seleziona Layout:</label>
+                <select id="layout-select" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                    <option value="1x1">1x1</option>
+                    <option value="1x2">1x2</option>
+                    <option value="2x2" selected>2x2</option>
+                    <option value="2x3">2x3</option>
+                    <option value="3x3">3x3</option>
+                </select>
+            </div>
+            <h3>Seleziona Webcam:</h3>
+            <div id="webcam-selection">
+                </div>
+            <div class="button-group">
+                <button onclick="clearSelection()">Deseleziona Tutto</button>
+                <button onclick="openMosaic()">Apri Mosaico</button>
+            </div>
+        </div>
+        <div id="map"></div>
+    </div>
 
     <script>
         let map;
         let markers = [];
-
-        // Dati delle webcam caricati direttamente nel codice
         const webcamData = [
             { id: 1, citta: "Castelsaraceno", provincia: "Pz", lat: 40.165169697747686, lng: 15.991809747770796, link: "https://www.skylinewebcams.com/it/webcam/italia/basilicata/potenza/castelsaraceno-ponte-tibetano.html", stato: "Attivo", note: "Ponte Tibetano" },
             { id: 2, citta: "Potenza", provincia: "Pz", lat: 40.165169697747686, lng: 15.991809747770796, link: "https://www.skylinewebcams.com/it/webcam/italia/basilicata/potenza/panorama.html", stato: "Attivo", note: "Vista Ponte Musumeci" },
@@ -119,10 +247,8 @@
             { id: 21, citta: "San Severino L", provincia: "Pz", lat: 40.02268291438262, lng: 16.13864747037591, link: "https://www.meteoplanet.it/webcam/san+severino+lucano/massiccio+del+pollino+-+san+severino/4751", stato: "Attivo", note: "Monte Sirino SSW" },
             { id: 22, citta: "Pisticci", provincia: "Mt", lat: 40.359846618506516, lng: 16.69396523160106, link: "https://www.meteoplanet.it/webcam/pisticci/marconia+-+pisticci/4435", stato: "Attivo", note: "ESE - Marina" },
             { id: 23, citta: "Pergola", provincia: "Pz", lat: 40.4311207784267, lng: 15.681646213121974, link: "https://www.pergolameteo.it/joomla/images/webcampergola.html", stato: "Attivo", note: "3 webcam" }
-            // L'ultima riga del tuo CSV "meteocampoli" è stata omessa perché non ha coordinate valide
         ];
 
-        // Questa funzione viene chiamata dall'API di Google Maps una volta caricata
         async function initMap() {
             const basilicataCenter = { lat: 40.4000, lng: 15.9000 };
 
@@ -132,15 +258,15 @@
                 mapTypeId: google.maps.MapTypeId.ROADMAP
             });
 
-            // Carica i marker dai dati già presenti
             loadWebcamMarkers();
+            populateWebcamSelection(); // Popola la lista di selezione
         }
 
-        // Funzione per caricare i marker sulla mappa dai dati 'webcamData'
         function loadWebcamMarkers() {
             webcamData.forEach(webcam => {
                 if (webcam.lat && webcam.lng && webcam.link && webcam.citta && webcam.provincia) {
                     addMarker({
+                        id: webcam.id, // Passa l'ID per usarlo nella selezione
                         idCittaProvincia: `${webcam.citta} (${webcam.provincia})`,
                         lat: webcam.lat,
                         lng: webcam.lng,
@@ -154,7 +280,6 @@
             });
         }
 
-        // Funzione per aggiungere un marker singolo alla mappa
         function addMarker(webcam) {
             const marker = new google.maps.Marker({
                 position: { lat: webcam.lat, lng: webcam.lng },
@@ -162,12 +287,17 @@
                 title: webcam.idCittaProvincia,
             });
 
+            // Modifica l'InfoWindow per aggiungere la checkbox
             const infoWindowContent = `
                 <h3>${webcam.idCittaProvincia}</h3>
                 <p>Stato: <strong>${webcam.stato}</strong></p>
                 ${webcam.note ? `<p>Note: ${webcam.note}</p>` : ''}
                 <p><a href="${webcam.link}" target="_blank">Vedi Webcam Esterna</a></p>
-                <button onclick="addWebcamToMosaic('${encodeURIComponent(webcam.idCittaProvincia)}', '${encodeURIComponent(webcam.link)}')">Aggiungi a Mosaico</button>
+                <div style="margin-top: 10px;">
+                    <input type="checkbox" id="webcam-${webcam.id}" value="${webcam.id}" 
+                           onchange="updateSelectionFromMap(${webcam.id})" />
+                    <label for="webcam-${webcam.id}">Seleziona per Mosaico</label>
+                </div>
             `;
 
             const infoWindow = new google.maps.InfoWindow({
@@ -176,14 +306,80 @@
 
             marker.addListener("click", () => {
                 infoWindow.open(map, marker);
+                // Sincronizza lo stato della checkbox nell'InfoWindow con il pannello di controllo
+                const checkboxInPanel = document.getElementById(`checkbox-${webcam.id}`);
+                const checkboxInInfoWindow = document.getElementById(`webcam-${webcam.id}`);
+                if (checkboxInPanel && checkboxInInfoWindow) {
+                    checkboxInInfoWindow.checked = checkboxInPanel.checked;
+                }
             });
 
             markers.push(marker);
         }
 
-        // Funzione per aprire la pagina del mosaico
-        function addWebcamToMosaic(idCittaProvincia, link) {
-            window.open(`mosaico.html?webcam=${idCittaProvincia}&link=${link}`, '_blank');
+        // Funzione per popolare il pannello di selezione delle webcam
+        function populateWebcamSelection() {
+            const selectionDiv = document.getElementById('webcam-selection');
+            webcamData.forEach(webcam => {
+                const div = document.createElement('div');
+                div.className = 'webcam-item';
+                div.innerHTML = `
+                    <input type="checkbox" id="checkbox-${webcam.id}" value="${webcam.id}" />
+                    <label for="checkbox-${webcam.id}">${webcam.citta} (${webcam.provincia}) - ${webcam.note}</label>
+                `;
+                selectionDiv.appendChild(div);
+            });
+        }
+
+        // Sincronizza la selezione dal pannello di controllo alla checkbox nell'InfoWindow
+        function updateSelectionFromMap(webcamId) {
+            const checkboxInPanel = document.getElementById(`checkbox-${webcamId}`);
+            const checkboxInInfoWindow = document.getElementById(`webcam-${webcamId}`);
+            if (checkboxInPanel && checkboxInInfoWindow) {
+                checkboxInPanel.checked = checkboxInInfoWindow.checked;
+            }
+        }
+
+        // Funzione per deselezionare tutte le webcam
+        function clearSelection() {
+            const checkboxes = document.querySelectorAll('#webcam-selection input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = false);
+            // Anche le checkbox nelle infoWindow aperte se ci fossero
+            const infoWindowCheckboxes = document.querySelectorAll('.gm-style input[type="checkbox"]');
+            infoWindowCheckboxes.forEach(cb => cb.checked = false);
+        }
+
+        // Funzione per aprire la pagina del mosaico con le webcam selezionate e il layout
+        function openMosaic() {
+            const selectedWebcams = [];
+            const checkboxes = document.querySelectorAll('#webcam-selection input[type="checkbox"]:checked');
+            checkboxes.forEach(cb => {
+                const webcamId = parseInt(cb.value);
+                const webcam = webcamData.find(w => w.id === webcamId);
+                if (webcam) {
+                    selectedWebcams.push({
+                        name: `${webcam.citta} (${webcam.provincia}) - ${webcam.note}`,
+                        link: webcam.link
+                    });
+                }
+            });
+
+            if (selectedWebcams.length === 0) {
+                alert("Seleziona almeno una webcam per il mosaico!");
+                return;
+            }
+
+            const layout = document.getElementById('layout-select').value;
+            const dataString = encodeURIComponent(JSON.stringify(selectedWebcams));
+
+            // Passa i dati al mosaico tramite URL (limitato dalla lunghezza URL) o localStorage
+            // Per maggiore robustezza, useremo localStorage se la stringa è troppo lunga
+            if (dataString.length > 2000) { // Un limite arbitrario, URL lunghi possono causare problemi
+                localStorage.setItem('mosaicWebcams', JSON.stringify(selectedWebcams));
+                window.open(`mosaico.html?layout=${layout}&source=localStorage`, '_blank');
+            } else {
+                window.open(`mosaico.html?layout=${layout}&webcams=${dataString}`, '_blank');
+            }
         }
     </script>
 
