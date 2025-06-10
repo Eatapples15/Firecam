@@ -96,33 +96,38 @@
         let map;
         let markers = [];
 
-        // La funzione initMap verrà chiamata dal callback di Google Maps API
+        // Questa funzione verrà chiamata dall'API di Google Maps una volta caricata
         async function initMap() {
-            const basilicataCenter = { lat: 40.4000, lng: 15.9000 };
+            const basilicataCenter = { lat: 40.4000, lng: 15.9000 }; // Centro della Basilicata
 
             map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 9,
+                zoom: 9, // Livello di zoom iniziale
                 center: basilicataCenter,
                 mapTypeId: google.maps.MapTypeId.ROADMAP
             });
 
+            // Avvia il recupero dei dati delle webcam DOPO che la mappa è stata inizializzata
             await fetchWebcamData();
         }
 
+        // Funzione per recuperare e processare i dati CSV
         async function fetchWebcamData() {
             const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTdQqAKe4k4goB9Q7ijesTG-JCE4uw-8UXX4HyHwuH9aeKsyxKHoklMLMfIE_yPL_hvG72s8mIUpeCP/pub?output=csv';
 
             try {
+                // Utilizza PapaParse per scaricare e parsare il CSV
                 PapaParse.parse(csvUrl, {
-                    download: true,
-                    header: true,
-                    skipEmptyLines: true,
+                    download: true,       // Scarica il file CSV dall'URL
+                    header: true,         // Tratta la prima riga come intestazione per i nomi delle colonne
+                    skipEmptyLines: true, // Ignora le righe vuote nel CSV
                     complete: function(results) {
+                        // Callback quando il parsing è completo
                         if (results.errors.length > 0) {
-                            console.error("Errori nel parsing CSV:", results.errors);
+                            console.error("Errori rilevati nel parsing CSV:", results.errors);
                         }
 
                         results.data.forEach(row => {
+                            // Accedi ai dati usando i nomi delle colonne (es. row["Città"])
                             const id = row["Id"];
                             const citta = row["Città"];
                             const provincia = row["Provincia"];
@@ -131,23 +136,26 @@
                             const stato = row["Stato"];
                             const note = row["Note"];
 
+                            // Esegui i controlli di validità sui dati essenziali
                             if (coordinateStr && link && citta && provincia) {
                                 const [lat, lng] = coordinateStr.split(',').map(Number);
                                 if (!isNaN(lat) && !isNaN(lng)) {
+                                    // Aggiungi il marker alla mappa se i dati sono validi
                                     addMarker({
                                         idCittaProvincia: `${citta} (${provincia})`,
                                         lat,
                                         lng,
                                         link,
-                                        stato: stato || 'Sconosciuto',
-                                        note: note || 'Nessuna nota'
+                                        stato: stato || 'Sconosciuto', // Valore di default se 'Stato' è vuoto
+                                        note: note || 'Nessuna nota'   // Valore di default se 'Note' è vuoto
                                     });
                                 } else {
                                     console.warn(`Coordinate non valide per la riga (salto marker):`, row);
                                 }
                             } else {
-                                if (id === "" || id === null || id === undefined) {
-                                    // Ignora silenziosamente le righe prive di ID (probabilmente l'ultima riga del tuo CSV)
+                                // Ignora righe incomplete o senza dati essenziali, specialmente la riga senza ID alla fine
+                                if (!id || id.trim() === '') {
+                                    // Questa è probabilmente la riga incompleta alla fine del tuo CSV, la ignora silenziosamente
                                 } else {
                                     console.warn(`Dati essenziali (coordinate, link, città o provincia) mancanti per la riga (salto marker):`, row);
                                 }
@@ -156,11 +164,13 @@
                     }
                 });
             } catch (error) {
+                // Cattura errori nel recupero o nell'inizializzazione di PapaParse
                 console.error("Errore nel recupero o inizializzazione del parsing CSV:", error);
                 alert("Si è verificato un errore durante il caricamento dei dati delle webcam. Controlla la console per i dettagli.");
             }
         }
 
+        // Funzione per aggiungere un marker alla mappa
         function addMarker(webcam) {
             const marker = new google.maps.Marker({
                 position: { lat: webcam.lat, lng: webcam.lng },
@@ -168,6 +178,7 @@
                 title: webcam.idCittaProvincia,
             });
 
+            // Contenuto della InfoWindow che appare cliccando sul marker
             const infoWindowContent = `
                 <h3>${webcam.idCittaProvincia}</h3>
                 <p>Stato: <strong>${webcam.stato}</strong></p>
@@ -180,13 +191,15 @@
                 content: infoWindowContent
             });
 
+            // Apre l'InfoWindow quando il marker viene cliccato
             marker.addListener("click", () => {
                 infoWindow.open(map, marker);
             });
 
-            markers.push(marker);
+            markers.push(marker); // Aggiungi il marker all'array
         }
 
+        // Funzione per reindirizzare alla pagina del mosaico con i parametri della webcam
         function addWebcamToMosaic(idCittaProvincia, link) {
             window.open(`mosaico.html?webcam=${idCittaProvincia}&link=${link}`, '_blank');
         }
