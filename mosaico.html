@@ -3,135 +3,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Webcam Basilicata - Mosaico</title>
+    <title>Mosaico Webcam - Sala di Controllo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f8f8f8;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f4f7f6;
+            color: #333;
         }
 
-        h1 {
+        header {
             text-align: center;
-            padding: 20px;
-            background-color: #f0f0f0;
-            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #2c3e50;
+            color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
-        #webcam-grid {
+        header img {
+            height: 60px;
+            margin-right: 15px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.2em;
+        }
+
+        #mosaic-container {
+            flex-grow: 1;
+            padding: 20px;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Colonne adattive */
-            gap: 20px;
-            padding: 20px;
+            gap: 15px;
+            box-sizing: border-box; /* Include padding nel calcolo della larghezza/altezza */
         }
 
-        .webcam-container {
+        /* Layout dinamici */
+        .layout-1x1 { grid-template-columns: 1fr; }
+        .layout-1x2 { grid-template-columns: 1fr; grid-template-rows: repeat(2, 1fr); }
+        .layout-2x2 { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); }
+        .layout-2x3 { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(3, 1fr); }
+        .layout-3x3 { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); }
+
+        .webcam-card {
+            background-color: #ffffff;
             border: 1px solid #ddd;
             border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             overflow: hidden;
-            background-color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            position: relative;
-        }
-
-        .webcam-container h2 {
-            font-size: 1.2em;
-            padding: 10px;
-            margin: 0;
-            background-color: #eee;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .webcam-container iframe {
-            width: 100%;
-            height: 250px; /* Altezza dei frame delle webcam */
-            border: none;
-        }
-
-        .remove-webcam {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background-color: rgba(255, 0, 0, 0.7);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 25px;
-            height: 25px;
             display: flex;
+            flex-direction: column;
+            text-align: center;
+            position: relative; /* Per posizionare il pulsante */
+            min-height: 150px; /* Altezza minima per le card */
+        }
+        
+        .webcam-card h3 {
+            margin: 10px 0;
+            font-size: 1.2em;
+            color: #2c3e50;
+            padding: 0 10px;
+        }
+
+        .webcam-card .link-overlay {
+            flex-grow: 1; /* Occupa lo spazio disponibile */
+            display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            cursor: pointer;
+            padding: 10px;
+        }
+
+        .webcam-card .link-overlay a {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
             font-weight: bold;
-            font-size: 1.2em;
+            transition: background-color 0.2s ease-in-out;
+            margin-top: 10px;
+        }
+
+        .webcam-card .link-overlay a:hover {
+            background-color: #2980b9;
+        }
+
+        .webcam-card .link-overlay p {
+            margin: 5px 0;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            #mosaic-container {
+                grid-template-columns: 1fr !important; /* Forza una colonna su schermi piccoli */
+                grid-template-rows: auto !important; /* Altezza automatica */
+            }
         }
     </style>
 </head>
 <body>
-    <h1>Mosaico Webcam Basilicata</h1>
-    <div id="webcam-grid">
+    <header>
+        <img src="Logo.png" alt="Logo">
+        <h1>Sala di Controllo</h1>
+    </header>
+
+    <div id="mosaic-container">
         </div>
 
     <script>
-        // Qui andrà il JavaScript per il mosaico
-        const webcamGrid = document.getElementById('webcam-grid');
-        let selectedWebcams = JSON.parse(localStorage.getItem('selectedWebcams')) || [];
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const layout = urlParams.get('layout') || '2x2'; // Default a 2x2
+            const source = urlParams.get('source');
 
-        function renderWebcams() {
-            webcamGrid.innerHTML = ''; // Pulisci la griglia prima di renderizzare
+            let selectedWebcams = [];
+
+            if (source === 'localStorage') {
+                const storedData = localStorage.getItem('mosaicWebcams');
+                if (storedData) {
+                    selectedWebcams = JSON.parse(storedData);
+                    localStorage.removeItem('mosaicWebcams'); // Pulisce localStorage dopo l'uso
+                }
+            } else {
+                const webcamsString = urlParams.get('webcams');
+                if (webcamsString) {
+                    selectedWebcams = JSON.parse(decodeURIComponent(webcamsString));
+                }
+            }
+
+            const mosaicContainer = document.getElementById('mosaic-container');
+            mosaicContainer.classList.add(`layout-${layout.replace('x', '')}`); // Es: layout-22 per 2x2
+
             if (selectedWebcams.length === 0) {
-                webcamGrid.innerHTML = '<p style="text-align: center;">Nessuna webcam selezionata. Torna alla <a href="index.html">mappa</a> per aggiungerne.</p>';
+                mosaicContainer.innerHTML = '<p style="text-align: center; margin-top: 50px; font-size: 1.2em;">Nessuna webcam selezionata. Torna alla <a href="index.html">pagina principale</a> per selezionarne alcune.</p>';
                 return;
             }
 
-            selectedWebcams.forEach((webcam, index) => {
-                const webcamContainer = document.createElement('div');
-                webcamContainer.classList.add('webcam-container');
-                webcamContainer.innerHTML = `
-                    <h2>${webcam.id}</h2>
-                    <iframe src="${webcam.link}" frameborder="0" allowfullscreen></iframe>
-                    <button class="remove-webcam" data-index="${index}">&times;</button>
+            selectedWebcams.forEach(webcam => {
+                const card = document.createElement('div');
+                card.className = 'webcam-card';
+                card.innerHTML = `
+                    <h3>${webcam.name}</h3>
+                    <div class="link-overlay">
+                        <p>Impossibile incorporare la webcam.</p>
+                        <a href="${webcam.link}" target="_blank">Apri Webcam in Nuova Scheda</a>
+                    </div>
                 `;
-                webcamGrid.appendChild(webcamContainer);
+                mosaicContainer.appendChild(card);
             });
-
-            // Aggiungi listener per i bottoni di rimozione
-            document.querySelectorAll('.remove-webcam').forEach(button => {
-                button.addEventListener('click', (event) => {
-                    const indexToRemove = event.target.dataset.index;
-                    removeWebcam(indexToRemove);
-                });
-            });
-        }
-
-        function removeWebcam(index) {
-            selectedWebcams.splice(index, 1); // Rimuovi l'elemento dall'array
-            localStorage.setItem('selectedWebcams', JSON.stringify(selectedWebcams)); // Aggiorna localStorage
-            renderWebcams(); // Rerenderizza la griglia
-        }
-
-        // Funzione per aggiungere una webcam dal link della mappa
-        function addWebcamFromURL() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const id = urlParams.get('webcam');
-            const link = urlParams.get('link');
-
-            if (id && link) {
-                // Controlla se la webcam è già presente per evitare duplicati
-                const isAlreadyAdded = selectedWebcams.some(w => w.id === id && w.link === link);
-                if (!isAlreadyAdded) {
-                    selectedWebcams.push({ id, link });
-                    localStorage.setItem('selectedWebcams', JSON.stringify(selectedWebcams));
-                }
-                // Rimuovi i parametri dall'URL per evitare ricaricamenti multipli
-                history.replaceState({}, document.title, window.location.pathname);
-            }
-            renderWebcams();
-        }
-
-        // Carica le webcam all'avvio della pagina
-        addWebcamFromURL();
+        });
     </script>
 </body>
 </html>
