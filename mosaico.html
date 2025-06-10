@@ -46,15 +46,15 @@
             padding: 20px;
             display: grid;
             gap: 15px;
-            box-sizing: border-box; /* Include padding nel calcolo della larghezza/altezza */
+            box-sizing: border-box;
         }
 
         /* Layout dinamici */
-        .layout-1x1 { grid-template-columns: 1fr; }
-        .layout-1x2 { grid-template-columns: 1fr; grid-template-rows: repeat(2, 1fr); }
-        .layout-2x2 { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); }
-        .layout-2x3 { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(3, 1fr); }
-        .layout-3x3 { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); }
+        .layout-11 { grid-template-columns: 1fr; }
+        .layout-12 { grid-template-columns: 1fr; grid-template-rows: repeat(2, 1fr); }
+        .layout-22 { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); }
+        .layout-23 { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(3, 1fr); }
+        .layout-33 { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); }
 
         .webcam-card {
             background-color: #ffffff;
@@ -65,8 +65,7 @@
             display: flex;
             flex-direction: column;
             text-align: center;
-            position: relative; /* Per posizionare il pulsante */
-            min-height: 150px; /* Altezza minima per le card */
+            min-height: 150px;
         }
         
         .webcam-card h3 {
@@ -76,16 +75,36 @@
             padding: 0 10px;
         }
 
-        .webcam-card .link-overlay {
-            flex-grow: 1; /* Occupa lo spazio disponibile */
+        .webcam-content {
+            flex-grow: 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             padding: 10px;
+            overflow: hidden;
         }
 
-        .webcam-card .link-overlay a {
+        .webcam-content img {
+            max-width: 100%;
+            max-height: 100%;
+            display: block;
+            object-fit: contain;
+            width: auto;
+            height: auto;
+            flex-grow: 1;
+        }
+
+        .webcam-content .link-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            flex-grow: 1;
+        }
+
+        .webcam-content .link-info a {
             display: inline-block;
             background-color: #3498db;
             color: white;
@@ -97,11 +116,11 @@
             margin-top: 10px;
         }
 
-        .webcam-card .link-overlay a:hover {
+        .webcam-content .link-info a:hover {
             background-color: #2980b9;
         }
 
-        .webcam-card .link-overlay p {
+        .webcam-content .link-info p {
             margin: 5px 0;
             font-size: 0.9em;
             color: #666;
@@ -109,8 +128,8 @@
 
         @media (max-width: 768px) {
             #mosaic-container {
-                grid-template-columns: 1fr !important; /* Forza una colonna su schermi piccoli */
-                grid-template-rows: auto !important; /* Altezza automatica */
+                grid-template-columns: 1fr !important;
+                grid-template-rows: auto !important;
             }
         }
     </style>
@@ -127,7 +146,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
-            const layout = urlParams.get('layout') || '2x2'; // Default a 2x2
+            const layout = urlParams.get('layout') || '2x2';
             const source = urlParams.get('source');
 
             let selectedWebcams = [];
@@ -136,7 +155,7 @@
                 const storedData = localStorage.getItem('mosaicWebcams');
                 if (storedData) {
                     selectedWebcams = JSON.parse(storedData);
-                    localStorage.removeItem('mosaicWebcams'); // Pulisce localStorage dopo l'uso
+                    localStorage.removeItem('mosaicWebcams');
                 }
             } else {
                 const webcamsString = urlParams.get('webcams');
@@ -146,7 +165,7 @@
             }
 
             const mosaicContainer = document.getElementById('mosaic-container');
-            mosaicContainer.classList.add(`layout-${layout.replace('x', '')}`); // Es: layout-22 per 2x2
+            mosaicContainer.classList.add(`layout-${layout.replace('x', '')}`);
 
             if (selectedWebcams.length === 0) {
                 mosaicContainer.innerHTML = '<p style="text-align: center; margin-top: 50px; font-size: 1.2em;">Nessuna webcam selezionata. Torna alla <a href="index.html">pagina principale</a> per selezionarne alcune.</p>';
@@ -156,11 +175,28 @@
             selectedWebcams.forEach(webcam => {
                 const card = document.createElement('div');
                 card.className = 'webcam-card';
+
+                let contentHtml = '';
+                const isImageLink = (webcam.link.match(/\.(jpeg|jpg|gif|png|webp|avif)(\?.*)?$/i));
+
+                if (isImageLink) {
+                    contentHtml = `<img src="${webcam.link}" alt="${webcam.name}" 
+                                   onerror="this.onerror=null;this.src='placeholder.png'; this.nextElementSibling.style.display='flex';" />
+                                   <div class="link-info" style="display:none;">
+                                       <p>Impossibile caricare l'immagine.</p>
+                                       <a href="${webcam.link}" target="_blank">Apri Webcam Esterna</a>
+                                   </div>`;
+                } else {
+                    contentHtml = `<div class="link-info">
+                                       <p>Impossibile incorporare la webcam.</p>
+                                       <a href="${webcam.link}" target="_blank">Apri Webcam in Nuova Scheda</a>
+                                   </div>`;
+                }
+
                 card.innerHTML = `
                     <h3>${webcam.name}</h3>
-                    <div class="link-overlay">
-                        <p>Impossibile incorporare la webcam.</p>
-                        <a href="${webcam.link}" target="_blank">Apri Webcam in Nuova Scheda</a>
+                    <div class="webcam-content">
+                        ${contentHtml}
                     </div>
                 `;
                 mosaicContainer.appendChild(card);
