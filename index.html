@@ -1,7 +1,91 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    </head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webcam Basilicata - Mappa Interattiva</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Stili CSS */
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            padding: 25px;
+            background-color: #2c3e50; /* Blu scuro */
+            color: white;
+            margin-bottom: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            font-size: 2.2em;
+        }
+
+        #map {
+            flex-grow: 1;
+            width: 100%;
+            min-height: 500px;
+            border-top: 5px solid #1abc9c;
+        }
+
+        /* Stili per l'InfoWindow di Google Maps */
+        .gm-style .gm-iw-c {
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            background-color: #ffffff;
+        }
+
+        .gm-style .gm-iw-c h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 1.4em;
+            margin-bottom: 10px;
+        }
+
+        .gm-style .gm-iw-c p {
+            margin: 5px 0;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .gm-style .gm-iw-c a {
+            color: #1abc9c;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.2s ease-in-out;
+        }
+
+        .gm-style .gm-iw-c a:hover {
+            color: #16a085;
+        }
+
+        .gm-style .gm-iw-c button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-top: 10px;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .gm-style .gm-iw-c button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
 <body>
     <h1>Webcam in Basilicata</h1>
     <div id="map"></div>
@@ -12,6 +96,7 @@
         let map;
         let markers = [];
 
+        // La funzione initMap verrà chiamata dal callback di Google Maps API
         async function initMap() {
             const basilicataCenter = { lat: 40.4000, lng: 15.9000 };
 
@@ -106,6 +191,7 @@
             window.open(`mosaico.html?webcam=${idCittaProvincia}&link=${link}`, '_blank');
         }
     </script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPopf5IhIsRjpZ8QS-W1atKwJ8OTvxscY&callback=initMap"></script>
+
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=LA_TUA_VERA_API_KEY&callback=initMap"></script>
 </body>
 </html>
